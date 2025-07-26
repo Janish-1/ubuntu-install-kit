@@ -51,4 +51,8 @@ bash scripts/install_redis.sh
 echo "📊 Installing SQLite..."
 bash scripts/install_sqlite.sh
 
-echo "�🎉 All tools, programming languages, and databases installed and up-to-date!"
+# Torrent Client
+echo "🌊 Installing qBittorrent..."
+bash scripts/install_qbittorrent.sh
+
+echo "🎉 All tools, programming languages, and databases installed and up-to-date!"
