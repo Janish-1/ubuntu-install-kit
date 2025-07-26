@@ -35,12 +35,6 @@ bash scripts/install_nodejs.sh
 echo "☕ Installing Java..."
 bash scripts/install_java.sh
 
-echo "🐹 Installing Go..."
-bash scripts/install_go.sh
-
-echo "🦀 Installing Rust..."
-bash scripts/install_rust.sh
-
 # Databases
 echo "🐬 Installing MySQL..."
 bash scripts/install_mysql.sh

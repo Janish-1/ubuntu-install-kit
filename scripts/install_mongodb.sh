@@ -5,6 +5,13 @@ set -e
 if ! command -v mongod &> /dev/null; then
   echo "📦 Installing MongoDB..."
   
+  # Ensure curl is installed
+  if ! command -v curl &> /dev/null; then
+    echo "📦 Installing curl..."
+    sudo apt update
+    sudo apt install -y curl
+  fi
+  
   # Import MongoDB public GPG key
   curl -fsSL https://pgp.mongodb.com/server-7.0.asc | sudo gpg -o /usr/share/keyrings/mongodb-server-7.0.gpg --dearmor
   
