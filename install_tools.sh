@@ -19,7 +19,10 @@ bash scripts/install_blueman.sh
 echo "📦 Installing VS Code..."
 bash scripts/install_vscode.sh
 
-echo "📦 Installing FreeFileSync..."
+echo "� Installing Android Studio..."
+bash scripts/install_android_studio.sh
+
+echo "� Installing FreeFileSync..."
 bash scripts/install_freefilesync.sh
 
 echo "🧩 Creating FreeFileSync desktop shortcut..."
@@ -28,6 +31,12 @@ bash scripts/create_freefilesync_shortcut.sh
 # Programming Languages
 echo "🐍 Installing Python..."
 bash scripts/install_python.sh
+
+echo "🐍 Installing Conda (Miniconda)..."
+bash scripts/install_conda.sh
+
+echo "📓 Installing Jupyter Notebook..."
+bash scripts/install_jupyter.sh
 
 echo "🟢 Installing Node.js..."
 bash scripts/install_nodejs.sh
