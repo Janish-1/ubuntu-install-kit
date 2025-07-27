@@ -2,35 +2,24 @@
 set -e
 
 # ---- Jupyter Notebook ----
-echo "📓 Installing Jupyter Notebook..."
-
-# Check if conda is available first (preferred method)
-if command -v conda &> /dev/null; then
-  echo "🐍 Installing Jupyter via conda..."
-  conda install -c conda-forge jupyter notebook jupyterlab -y
+if ! command -v jupyter-notebook &> /dev/null; then
+  echo "📓 Installing Jupyter Notebook via apt..."
+  sudo apt update
+  sudo apt install -y jupyter-notebook python3-notebook
   
-  # Install some useful extensions
-  echo "🔧 Installing useful Jupyter extensions..."
-  conda install -c conda-forge jupyter_contrib_nbextensions -y
-  
-elif command -v pip3 &> /dev/null; then
-  echo "🐍 Installing Jupyter via pip..."
-  pip3 install --user jupyter notebook jupyterlab
-  
-  # Install some useful extensions
-  echo "🔧 Installing useful Jupyter extensions..."
-  pip3 install --user jupyter_contrib_nbextensions
+  # Install additional useful packages
+  echo "🔧 Installing additional Jupyter packages..."
+  sudo apt install -y python3-ipywidgets python3-matplotlib python3-pandas python3-numpy
   
 else
-  echo "❌ Neither conda nor pip3 found. Please install Python first."
-  exit 1
+  echo "✅ Jupyter Notebook already installed."
 fi
 
 # Verify installation
-if command -v jupyter &> /dev/null || python3 -c "import jupyter" &> /dev/null; then
+if command -v jupyter-notebook &> /dev/null; then
   echo "✅ Jupyter Notebook installed successfully!"
-  echo "📝 You can start Jupyter with: jupyter notebook"
-  echo "📝 Or start JupyterLab with: jupyter lab"
+  echo "📝 You can start Jupyter with: jupyter-notebook"
+  echo "📝 Note: JupyterLab is not available via apt. Use 'pip3 install jupyterlab' if needed."
 else
   echo "❌ Jupyter installation may have failed. Please check manually."
 fi

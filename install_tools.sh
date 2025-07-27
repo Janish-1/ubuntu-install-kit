@@ -32,9 +32,6 @@ bash scripts/create_freefilesync_shortcut.sh
 echo "🐍 Installing Python..."
 bash scripts/install_python.sh
 
-echo "🐍 Installing Conda (Miniconda)..."
-bash scripts/install_conda.sh
-
 echo "📓 Installing Jupyter Notebook..."
 bash scripts/install_jupyter.sh
 
