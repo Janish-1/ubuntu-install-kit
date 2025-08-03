@@ -41,6 +41,9 @@ bash scripts/install_nodejs.sh
 echo "☕ Installing Java..."
 bash scripts/install_java.sh
 
+echo "🔧 Installing Gradle..."
+bash scripts/install_gradle.sh
+
 # Databases
 echo "🐬 Installing MySQL..."
 bash scripts/install_mysql.sh
