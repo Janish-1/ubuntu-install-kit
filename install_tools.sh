@@ -19,8 +19,11 @@ bash scripts/install_blueman.sh
 echo "📦 Installing VS Code..."
 bash scripts/install_vscode.sh
 
-echo "� Installing Android Studio..."
+echo "📱 Installing Android Studio..."
 bash scripts/install_android_studio.sh
+
+echo "🤖 Setting up Android SDK Command-Line Tools..."
+bash scripts/setup_android_sdk_path.sh
 
 echo "� Installing FreeFileSync..."
 bash scripts/install_freefilesync.sh
