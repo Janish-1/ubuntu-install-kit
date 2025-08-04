@@ -4,6 +4,9 @@ set -e
 echo "🔄 Starting installation of tools..."
 
 # Execute individual installation scripts
+echo "Installing Watchdog-inotify-tools"
+bash scripts/install_inotifytools.sh
+
 echo "📦 Installing snapd..."
 bash scripts/install_snapd.sh
 
