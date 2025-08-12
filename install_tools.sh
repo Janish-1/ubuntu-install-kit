@@ -50,6 +50,10 @@ bash scripts/install_java.sh
 echo "🔧 Installing Gradle..."
 bash scripts/install_gradle.sh
 
+# Archiver 
+echo " Installing XArchiver..."
+bash scripts/install_xarchiver.sh
+
 # Databases
 echo "🐬 Installing MySQL..."
 bash scripts/install_mysql.sh
