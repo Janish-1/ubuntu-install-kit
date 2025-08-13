@@ -57,6 +57,9 @@ bash scripts/install_xarchiver.sh
 echo "Installing TeamViewer..."
 bash scripts/install_teamviewer.sh
 
+echo "Installing SMB"
+bash scripts/install_smb.sh
+
 # Databases
 echo "🐬 Installing MySQL..."
 bash scripts/install_mysql.sh
