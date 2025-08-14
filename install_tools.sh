@@ -60,6 +60,9 @@ bash scripts/install_teamviewer.sh
 echo "Installing SMB"
 bash scripts/install_smb.sh
 
+echo "Installing/Filezilla"
+bash scripts/install_filezilla.sh
+
 # Databases
 echo "🐬 Installing MySQL..."
 bash scripts/install_mysql.sh
