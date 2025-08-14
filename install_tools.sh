@@ -66,6 +66,9 @@ bash scripts/install_filezilla.sh
 echo "Installing FTP"
 bash scripts/setup_ftp.sh
 
+echo "Installing RSync"
+bash scripts/install_rsync.sh
+
 # Databases
 echo "🐬 Installing MySQL..."
 bash scripts/install_mysql.sh
