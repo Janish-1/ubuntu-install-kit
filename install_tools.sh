@@ -69,6 +69,9 @@ bash scripts/setup_ftp.sh
 echo "Installing RSync"
 bash scripts/install_rsync.sh
 
+echo "Installing Discord"
+bash scripts/install_discord.sh
+
 # Databases
 echo "🐬 Installing MySQL..."
 bash scripts/install_mysql.sh
