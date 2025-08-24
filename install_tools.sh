@@ -50,6 +50,9 @@ bash scripts/install_java.sh
 echo "🔧 Installing Gradle..."
 bash scripts/install_gradle.sh
 
+echo "Installing Rust ..."
+bash scripts/insall_rust.sh
+
 # Programs
 echo " Installing XArchiver..."
 bash scripts/install_xarchiver.sh
