@@ -51,7 +51,7 @@ echo "🔧 Installing Gradle..."
 bash scripts/install_gradle.sh
 
 echo "Installing Rust ..."
-bash scripts/insall_rust.sh
+bash scripts/install_rust.sh
 
 # Programs
 echo " Installing XArchiver..."
