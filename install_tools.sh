@@ -72,6 +72,9 @@ bash scripts/install_rsync.sh
 echo "Installing Discord"
 bash scripts/install_discord.sh
 
+echo "Installing Ngrok"
+bash scripts/install_ngrok.sh
+
 # Databases
 echo "🐬 Installing MySQL..."
 bash scripts/install_mysql.sh
