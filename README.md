@@ -16,11 +16,18 @@ ubuntu-install-kit
 │   ├── setup_android_sdk_path.sh       # Sets up Android SDK tools in PATH
 │   ├── install_freefilesync.sh         # Downloads and installs FreeFileSync if missing
 │   └── create_freefilesync_shortcut.sh # Creates a desktop shortcut for FreeFileSync
+├── uninstall
+│   ├── uninstall_snapd.sh              # Uninstalls snapd and all snap packages
+│   ├── uninstall_python.sh             # Uninstalls Python and pip packages
+│   ├── uninstall_nodejs.sh             # Uninstalls Node.js and npm
+│   ├── uninstall_mysql.sh              # Uninstalls MySQL with data backup options
+│   └── README.md                       # Documentation for uninstall scripts
 ├── critical
 │   ├── install_system_monitor.sh       # Installs system monitoring tools
 │   ├── setup_hdd_mount.sh              # Sets up automatic HDD mounting
 │   └── system_metrics                  # System monitoring scripts
 ├── install_tools.sh                    # Main script to run all installation scripts
+├── uninstall_tools.sh                  # Main script to run all uninstallation scripts
 └── README.md                           # Documentation for the project
 ```
 
@@ -30,6 +37,8 @@ ubuntu-install-kit
 - Ensure that your system is connected to the internet to download the necessary packages.
 
 ## Usage
+
+### Installation
 
 1. Open a terminal.
 2. Navigate to the project directory:
@@ -46,6 +55,32 @@ ubuntu-install-kit
    ```
 
 This will execute all the individual installation scripts in sequence, ensuring that all tools are installed and up-to-date.
+
+### Uninstallation
+
+If you need to remove tools installed by this kit:
+
+1. Make the main uninstallation script executable:
+   ```bash
+   chmod +x uninstall_tools.sh
+   ```
+2. Run the uninstallation script:
+   ```bash
+   ./uninstall_tools.sh
+   ```
+
+This will execute all the individual uninstallation scripts in sequence, removing all tools that were installed.
+
+You can also uninstall individual tools:
+```bash
+./uninstall/uninstall_python.sh  # Uninstall Python
+./uninstall/uninstall_vscode.sh  # Uninstall VS Code
+```
+
+Each uninstall script will:
+- Ask for confirmation before proceeding
+- Offer data preservation options when applicable
+- Clean up configuration files and dependencies
 
 ## Android SDK Command-Line Tools
 
