@@ -53,6 +53,9 @@ bash scripts/install_gradle.sh
 echo "Installing Rust ..."
 bash scripts/install_rust.sh
 
+echo "Installing Compser ..."
+bash scripts/install_composer.sh
+
 # Programs
 echo " Installing XArchiver..."
 bash scripts/install_xarchiver.sh
