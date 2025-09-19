@@ -11,3 +11,8 @@ else
     sudo apt install -y libreoffice
     echo "✅ LibreOffice installed successfully."
 fi
+
+echo "🔤 Installing extra fonts..."
+sudo apt install -y fonts-dejavu fonts-liberation fonts-noto fonts-freefont-ttf ttf-mscorefonts-installer fonts-roboto
+
+echo "✅ Fonts installed successfully."
