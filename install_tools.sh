@@ -34,6 +34,9 @@ bash scripts/install_freefilesync.sh
 echo "🧩 Creating FreeFileSync desktop shortcut..."
 bash scripts/create_freefilesync_shortcut.sh
 
+echo "Installing Libreoffice..."
+bash scripts/install_libreoffice.sh
+
 # Programming Languages
 echo "🐍 Installing Python..."
 bash scripts/install_python.sh
