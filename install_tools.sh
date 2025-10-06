@@ -37,6 +37,9 @@ bash scripts/create_freefilesync_shortcut.sh
 echo "Installing Libreoffice..."
 bash scripts/install_libreoffice.sh
 
+echo "Installing GIMP..."
+bash scripts/install_gimp.sh
+
 # Programming Languages
 echo "🐍 Installing Python..."
 bash scripts/install_python.sh
