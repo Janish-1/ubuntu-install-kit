@@ -28,17 +28,21 @@ bash scripts/install_android_studio.sh
 echo "🤖 Setting up Android SDK Command-Line Tools..."
 bash scripts/setup_android_sdk_path.sh
 
-echo "� Installing FreeFileSync..."
+echo "💾 Installing FreeFileSync..."
 bash scripts/install_freefilesync.sh
 
 echo "🧩 Creating FreeFileSync desktop shortcut..."
 bash scripts/create_freefilesync_shortcut.sh
 
-echo "Installing Libreoffice..."
+echo "📄 Installing LibreOffice..."
 bash scripts/install_libreoffice.sh
 
-echo "Installing GIMP..."
+echo "🎨 Installing GIMP..."
 bash scripts/install_gimp.sh
+
+# 🧭 Web Browsers
+echo "🌐 Installing Google Chrome..."
+bash scripts/install_chrome.sh
 
 # Programming Languages
 echo "🐍 Installing Python..."
@@ -56,35 +60,35 @@ bash scripts/install_java.sh
 echo "🔧 Installing Gradle..."
 bash scripts/install_gradle.sh
 
-echo "Installing Rust ..."
+echo "🦀 Installing Rust..."
 bash scripts/install_rust.sh
 
-echo "Installing Compser ..."
+echo "🎼 Installing Composer..."
 bash scripts/install_composer.sh
 
 # Programs
-echo " Installing XArchiver..."
+echo "📦 Installing XArchiver..."
 bash scripts/install_xarchiver.sh
 
-echo "Installing TeamViewer..."
+echo "💻 Installing TeamViewer..."
 bash scripts/install_teamviewer.sh
 
-echo "Installing SMB"
+echo "📂 Installing SMB..."
 bash scripts/install_smb.sh
 
-echo "Installing Filezilla"
+echo "🌐 Installing FileZilla..."
 bash scripts/install_filezilla.sh
 
-echo "Installing FTP"
+echo "📡 Setting up FTP..."
 bash scripts/setup_ftp.sh
 
-echo "Installing RSync"
+echo "🔁 Installing RSync..."
 bash scripts/install_rsync.sh
 
-echo "Installing Discord"
+echo "💬 Installing Discord..."
 bash scripts/install_discord.sh
 
-echo "Installing Ngrok"
+echo "🌀 Installing Ngrok..."
 bash scripts/install_ngrok.sh
 
 # Databases
@@ -94,7 +98,7 @@ bash scripts/install_mysql.sh
 echo "🐘 Installing PostgreSQL..."
 bash scripts/install_postgresql.sh
 
-echo "� Installing MongoDB..."
+echo "🍃 Installing MongoDB..."
 bash scripts/install_mongodb.sh
 
 echo "🔴 Installing Redis..."
