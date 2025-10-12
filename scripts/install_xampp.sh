@@ -1,183 +1,151 @@
 #!/bin/bash
-
-# XAMPP Installation Script
-# This script downloads and installs XAMPP for Linux
-
 set -e
 
-echo "🚀 XAMPP Installation Script"
-echo "================================"
+echo "🚀 Full LAMP Stack Clean Reinstallation Script"
+echo "====================================================="
 
-# Check if running as root
+# ------------------------------
+# User Check
+# ------------------------------
 if [ "$EUID" -eq 0 ]; then
-  echo "❌ Please do not run this script as root"
+  echo "❌ Please do NOT run this as root. Run as normal user with sudo."
   exit 1
 fi
 
-# Variables
-XAMPP_DIR="/opt/lampp"
-TEMP_DIR="$(pwd)/temp"
+MYSQL_ROOT_PASSWORD="janish"
 
-# Create temp directory
-mkdir -p "$TEMP_DIR"
-cd "$TEMP_DIR"
+# ------------------------------
+# STEP 0: Stop services and wipe existing installations
+# ------------------------------
+echo "🧹 Stopping and removing any existing LAMP/XAMPP/PHP/MySQL/phpMyAdmin installations..."
 
-# Check if XAMPP is already installed
-if [ -d "$XAMPP_DIR" ]; then
-  echo "⚠️  XAMPP is already installed at $XAMPP_DIR"
-  echo "📋 To reinstall, first uninstall the existing version:"
-  echo "   sudo /opt/lampp/uninstall"
-  echo "   sudo rm -rf /opt/lampp"
-  exit 1
-fi
+# Stop services
+sudo systemctl stop apache2 || true
+sudo systemctl stop mysql || true
+sudo /opt/lampp/lampp stop || true
 
-echo "📦 Installing XAMPP..."
-echo ""
-echo "Available XAMPP versions:"
-echo "1. XAMPP 8.0.30 (PHP 8.0.30)"
-echo "2. XAMPP 8.1.25 (PHP 8.1.25)"
-echo "3. XAMPP 8.2.12 (PHP 8.2.12) [Recommended]"
-echo ""
+# Remove XAMPP
+sudo rm -rf /opt/lampp || true
 
-# Get user choice
-while true; do
-  read -p "Choose version (1-3): " choice
-  case $choice in
-    1)
-      VERSION="8.0.30"
-      PHP_VERSION="8.0.30"
-      break
-      ;;
-    2)
-      VERSION="8.1.25"
-      PHP_VERSION="8.1.25"
-      break
-      ;;
-    3)
-      VERSION="8.2.12"
-      PHP_VERSION="8.2.12"
-      break
-      ;;
-    *)
-      echo "❌ Invalid choice. Please enter 1, 2, or 3."
-      ;;
-  esac
-done
+# Remove Apache
+sudo apt purge -y apache2 apache2-utils apache2-bin apache2.2-common || true
+sudo rm -rf /etc/apache2 /var/www/html || true
 
-INSTALLER_NAME="xampp-linux-x64-${VERSION}-0-installer.run"
-DOWNLOAD_URL="https://sourceforge.net/projects/xampp/files/XAMPP%20Linux/${VERSION}/${INSTALLER_NAME}/download"
+# Remove MySQL
+sudo apt purge -y mysql-server mysql-client mysql-common mysql-server-core-* mysql-client-core-* || true
+sudo rm -rf /etc/mysql /var/lib/mysql || true
 
-echo ""
-echo "📦 Downloading XAMPP ${VERSION} (PHP ${PHP_VERSION})..."
+# Remove PHP
+sudo apt purge -y 'php*' || true
 
-# Download XAMPP installer
-if command -v wget >/dev/null 2>&1; then
-  if wget -O "$INSTALLER_NAME" "$DOWNLOAD_URL"; then
-    echo "✅ Downloaded successfully with wget"
-  else
-    echo "❌ Download failed with wget"
-    exit 1
-  fi
-elif command -v curl >/dev/null 2>&1; then
-  if curl -L -o "$INSTALLER_NAME" "$DOWNLOAD_URL"; then
-    echo "✅ Downloaded successfully with curl"
-  else
-    echo "❌ Download failed with curl"
-    exit 1
-  fi
-else
-  echo "❌ Neither wget nor curl is available"
-  echo "📋 Please manually download XAMPP from:"
-  echo "   https://www.apachefriends.org/download.html"
-  echo "   Save the file as: $TEMP_DIR/$INSTALLER_NAME"
-  echo "   Then run this script again."
-  
-  # Check if user has manually placed the file
-  if [ ! -f "$INSTALLER_NAME" ] || [ ! -s "$INSTALLER_NAME" ]; then
-    echo "❌ Installer not found or is empty. Exiting."
-    exit 1
-  else
-    echo "✅ Found manually downloaded installer."
-  fi
-fi
+# Remove phpMyAdmin
+echo phpmyadmin phpmyadmin/dbconfig-remove boolean true | sudo debconf-set-selections
+sudo DEBIAN_FRONTEND=noninteractive apt purge -y phpmyadmin
+sudo apt autoremove -y
+sudo apt autoclean -y
 
-# Verify the installer exists and has content
-if [ -f "$INSTALLER_NAME" ] && [ -s "$INSTALLER_NAME" ]; then
-  echo "📦 Running XAMPP installer..."
-  chmod +x "$INSTALLER_NAME"
-  
-  echo ""
-  echo "🔧 Starting interactive XAMPP installation..."
-  echo "   - You'll be asked to accept the license"
-  echo "   - Choose installation directory (default: /opt/lampp)"
-  echo "   - Select components to install"
-  echo ""
-  
-  # Run the installer (interactive)
-  sudo "./$INSTALLER_NAME"
-  
-  # Verify installation
-  if [ -d "$XAMPP_DIR" ] && [ -f "$XAMPP_DIR/xampp" ]; then
-    echo ""
-    echo "✅ XAMPP installed successfully!"
-    echo ""
-    echo "📋 XAMPP Information:"
-    echo "   Installation directory: $XAMPP_DIR"
-    echo "   PHP Version: $PHP_VERSION"
-    echo "   Includes: Apache, MariaDB, PHP, phpMyAdmin, ProFTPD, and more"
-    echo ""
-    echo "🚀 Getting Started:"
-    echo "   Start XAMPP:    sudo /opt/lampp/xampp start"
-    echo "   Stop XAMPP:     sudo /opt/lampp/xampp stop"
-    echo "   Restart XAMPP:  sudo /opt/lampp/xampp restart"
-    echo "   Status:         sudo /opt/lampp/xampp status"
-    echo ""
-    echo "🌐 Access URLs:"
-    echo "   Control Panel:  http://localhost/dashboard/"
-    echo "   phpMyAdmin:     http://localhost/phpmyadmin/"
-    echo "   Your projects:  Place in /opt/lampp/htdocs/"
-    echo ""
-    echo "🔧 Configuration:"
-    echo "   Apache config:  /opt/lampp/etc/httpd.conf"
-    echo "   PHP config:     /opt/lampp/etc/php.ini"
-    echo "   MySQL config:   /opt/lampp/etc/my.cnf"
-    echo ""
-    echo "⚠️  Security Note:"
-    echo "   Run security script: sudo /opt/lampp/xampp security"
-    echo "   This will set passwords for MySQL and ProFTPD"
-    
-    # Create desktop shortcut if desktop environment is available
-    if [ -n "$XDG_CURRENT_DESKTOP" ] && [ -d "$HOME/Desktop" ]; then
-      echo ""
-      echo "🖥️  Creating desktop shortcut..."
-      cat > "$HOME/Desktop/XAMPP Control Panel.desktop" << EOF
-[Desktop Entry]
-Version=1.0
-Type=Application
-Name=XAMPP Control Panel
-Comment=Start and stop XAMPP services
-Exec=gksudo /opt/lampp/manager-linux-x64.run
-Icon=/opt/lampp/htdocs/favicon.ico
-Terminal=false
-Categories=Development;WebDevelopment;
+echo "✅ All old LAMP/XAMPP/PHP/MySQL/phpMyAdmin installations removed."
+
+# ------------------------------
+# STEP 1: Update packages
+# ------------------------------
+echo "📦 Updating system packages..."
+sudo apt update -y
+sudo apt upgrade -y
+
+# ------------------------------
+# STEP 2: Install Apache
+# ------------------------------
+echo "🌐 Installing Apache..."
+sudo apt install apache2 -y
+sudo systemctl enable apache2
+sudo systemctl start apache2
+
+# ------------------------------
+# STEP 3: Install MySQL
+# ------------------------------
+echo "🗄️  Installing MySQL..."
+sudo apt install mysql-server -y
+sudo systemctl enable mysql
+sudo systemctl start mysql
+
+# ------------------------------
+# STEP 4: Configure MySQL root user for MySQL 8+
+# ------------------------------
+echo "🔧 Configuring MySQL root user..."
+sudo systemctl start mysql
+
+sudo mysql <<EOF
+ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY '$MYSQL_ROOT_PASSWORD';
+FLUSH PRIVILEGES;
 EOF
-      chmod +x "$HOME/Desktop/XAMPP Control Panel.desktop"
-      echo "✅ Desktop shortcut created"
-    fi
-    
-  else
-    echo "❌ Installation failed - XAMPP not found in $XAMPP_DIR"
-    exit 1
-  fi
-else
-  echo "❌ Installer file not found or is empty"
-  exit 1
+
+echo "✅ MySQL root password set to '$MYSQL_ROOT_PASSWORD'."
+
+# ------------------------------
+# STEP 5: Install PHP + extensions
+# ------------------------------
+echo "🐘 Installing PHP and common extensions..."
+sudo apt install php libapache2-mod-php php-mysql php-cli php-curl php-xml php-mbstring php-zip php-gd php-json php-common -y
+
+# ------------------------------
+# STEP 6: Restart Apache
+# ------------------------------
+sudo systemctl restart apache2
+
+# ------------------------------
+# STEP 7: Install phpMyAdmin (non-interactive)
+# ------------------------------
+echo "🧰 Installing phpMyAdmin..."
+echo phpmyadmin phpmyadmin/dbconfig-install boolean true | sudo debconf-set-selections
+echo phpmyadmin phpmyadmin/app-password-confirm password "$MYSQL_ROOT_PASSWORD" | sudo debconf-set-selections
+echo phpmyadmin phpmyadmin/mysql/admin-pass password "$MYSQL_ROOT_PASSWORD" | sudo debconf-set-selections
+echo phpmyadmin phpmyadmin/mysql/app-pass password "$MYSQL_ROOT_PASSWORD" | sudo debconf-set-selections
+echo phpmyadmin phpmyadmin/reconfigure-webserver multiselect apache2 | sudo debconf-set-selections
+
+sudo DEBIAN_FRONTEND=noninteractive apt install phpmyadmin -y
+
+# ------------------------------
+# STEP 8: Link phpMyAdmin to web root
+# ------------------------------
+if [ ! -d "/var/www/html/phpmyadmin" ]; then
+  echo "🔗 Linking phpMyAdmin..."
+  sudo ln -s /usr/share/phpmyadmin /var/www/html/phpmyadmin
 fi
 
-# Clean up temporary files
-cd ..
-rm -rf "$TEMP_DIR"
+# ------------------------------
+# STEP 9: Ensure phpMyAdmin allows root login via password
+# ------------------------------
+CONFIG_FILE="/etc/phpmyadmin/config.inc.php"
 
-echo ""
-echo "🎉 XAMPP installation completed!"
-echo "   You can now start developing with Apache, PHP, and MariaDB!"
+if [ -f "$CONFIG_FILE" ]; then
+    # Set auth_type = cookie and AllowNoPassword = FALSE
+    sudo sed -i "s/\$cfg\['Servers'\]\[\$i\]\['AllowNoPassword'\] = .*/\$cfg['Servers'][\$i]['AllowNoPassword'] = FALSE;/" "$CONFIG_FILE" || true
+else
+    echo "\$cfg['Servers'][\$i]['auth_type'] = 'cookie';" | sudo tee -a "$CONFIG_FILE"
+    echo "\$cfg['Servers'][\$i]['AllowNoPassword'] = FALSE;" | sudo tee -a "$CONFIG_FILE"
+fi
+
+# ------------------------------
+# STEP 10: Restart Apache again
+# ------------------------------
+sudo systemctl restart apache2
+
+# ------------------------------
+# STEP 11: Optional test PHP page
+# ------------------------------
+echo "<?php phpinfo(); ?>" | sudo tee /var/www/html/info.php > /dev/null
+
+# ------------------------------
+# STEP 12: Final confirmation
+# ------------------------------
+echo "======================================="
+echo "✅ CLEAN LAMP INSTALLATION COMPLETE!"
+echo "======================================="
+echo "🌍 Apache:        http://localhost/"
+echo "🧰 phpMyAdmin:    http://localhost/phpmyadmin"
+echo "🗝️  MySQL User:   root"
+echo "🔓 Password:      $MYSQL_ROOT_PASSWORD"
+echo "🖥️  Test PHP:     http://localhost/info.php"
+echo "======================================="
+echo "📢 Tip: Use root / $MYSQL_ROOT_PASSWORD to log in to phpMyAdmin."
