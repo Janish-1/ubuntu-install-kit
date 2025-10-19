@@ -114,16 +114,47 @@ sudo systemctl restart apache2
 echo "<?php phpinfo(); ?>" | sudo tee $WEBROOT/info.php > /dev/null
 sudo chmod 644 $WEBROOT/info.php
 
-# STEP 8: Set PHP as default CLI
+# STEP 8: Install phpMyAdmin
+echo "🧠 Installing phpMyAdmin..."
+sudo apt-get install -y phpmyadmin
+
+# Configure phpMyAdmin with Apache - create Alias and PHP-FPM handler
+echo "⚙️  Configuring phpMyAdmin..."
+sudo tee /etc/apache2/conf-available/phpmyadmin.conf > /dev/null << 'PHPMYADMIN_CONF'
+# phpMyAdmin Apache configuration
+Alias /phpmyadmin /usr/share/phpmyadmin
+
+<Directory /usr/share/phpmyadmin>
+    Options Indexes FollowSymLinks
+    AllowOverride All
+    Require all granted
+
+    # PHP-FPM handler for PHP files
+    <FilesMatch "\.php$">
+        SetHandler "proxy:unix:/run/php/php-fpm.sock|fcgi://localhost"
+    </FilesMatch>
+</Directory>
+
+# Restrict access to configuration files
+<Directory /usr/share/phpmyadmin/config>
+    Require all denied
+</Directory>
+PHPMYADMIN_CONF
+
+# Enable the configuration
+sudo ln -sf /etc/apache2/conf-available/phpmyadmin.conf /etc/apache2/conf-enabled/phpmyadmin.conf 2>/dev/null || true
+sudo systemctl reload apache2
+
+# STEP 9: Set PHP as default CLI
 echo "🔗 Setting PHP 8.2 as default CLI..."
 sudo update-alternatives --install /usr/bin/php php /usr/bin/php8.2 82 || true
 
-# STEP 9: Verify Installation
+# STEP 10: Verify Installation
 echo "======================================="
 echo "✅ LAMP STACK INSTALLED SUCCESSFULLY!"
 echo "======================================="
 echo "🌍 Apache:        http://localhost/"
-echo "🧰 phpMyAdmin:    http://localhost/phpmyadmin"
+echo "🧰 phpMyAdmin:    http://localhost/phpmyadmin/"
 echo "🗝️  MySQL User:   root"
 echo "🔓 Password:      $MYSQL_ROOT_PASSWORD"
 echo "🖥️  Test PHP:     http://localhost/info.php"
