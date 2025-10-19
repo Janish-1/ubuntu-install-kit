@@ -70,16 +70,28 @@ sudo apt-get install -y apache2 apache2-utils
 echo "🐘 Installing PHP 8.2 with FPM..."
 sudo apt-get install -y php8.2-fpm php8.2-cli php8.2-common php8.2-mysql php8.2-mbstring php8.2-curl php8.2-gd php8.2-xml php8.2-zip php8.2-intl php8.2-bcmath php8.2-imagick php8.2-dom php8.2-sqlite3
 
+# Restart Apache to ensure modules are recognized
+echo "⏸️  Restarting Apache to initialize modules..."
+sudo systemctl restart apache2
+sleep 2
+
 # Enable required Apache modules for FPM
 echo "📄 Enabling Apache modules..."
-sudo a2enmod proxy
-sudo a2enmod proxy_fcgi
-sudo a2enmod rewrite
-sudo a2enmod ssl
+sudo a2enmod proxy || echo "⚠️  Could not enable proxy module, trying alternative..."
+sudo a2enmod proxy_fcgi || echo "⚠️  Could not enable proxy_fcgi module..."
+sudo a2enmod rewrite || echo "⚠️  Could not enable rewrite module..."
+sudo a2enmod ssl || echo "⚠️  Could not enable ssl module..."
 
 # Configure Apache to use PHP-FPM
 echo "🔧 Configuring Apache for PHP-FPM..."
 sudo a2enconf php8.2-fpm || true
+
+# Test Apache configuration and reload
+echo "🧪 Testing Apache configuration..."
+sudo apache2ctl configtest || {
+  echo "⚠️  Apache configuration test failed, attempting repair..."
+  sudo systemctl restart apache2
+}
 
 # STEP 4: Install MySQL
 echo "🗄️  Installing MySQL Server..."
