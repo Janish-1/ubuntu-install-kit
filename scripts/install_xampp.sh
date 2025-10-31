@@ -1,232 +1,165 @@
 #!/bin/bash
 set -e
 
-echo "🚀 LAMP Stack Installation (Apache + PHP 8.2 + MySQL)"
+echo "🚀 LAMP Stack Full Installation (Ubuntu 22.04+)"
 echo "======================================================="
 
-# Check if running as root
-if [ "$EUID" -eq 0 ]; then
-  echo "❌ Please DO NOT run this as root. Run as normal user with sudo."
-  exit 1
-fi
-
-# CONFIG
+# --- CONFIGURATION ---
 MYSQL_ROOT_PASSWORD="janish"
 WEBROOT="/var/www/html"
+DOMAIN="127.0.0.1"
+USER=$(whoami)
 
-# STEP 0: Clean up old installations
-echo "🧹 Stopping and removing old LAMP/XAMPP installations..."
-sudo systemctl stop apache2 mysql 2>/dev/null || true
-sudo systemctl stop apache2.service mysql.service 2>/dev/null || true
+# --- STEP -1: COMPLETE CLEANUP ---
+echo "🧹 Cleaning up any previous LAMP / MySQL installations..."
 
-# Disable Apache modules that might cause conflicts
-echo "🔌 Disabling problematic Apache modules..."
-sudo a2dismod mpm_event 2>/dev/null || true
-sudo a2dismod mpm_prefork 2>/dev/null || true
-sudo a2dismod php8.2 2>/dev/null || true
+sudo systemctl stop mysql mariadb apache2 php-fpm 2>/dev/null || true
+sudo apt purge -y mysql* mariadb* php* apache2* phpmyadmin* 'libmysql*' || true
+sudo apt autoremove -y
+sudo apt autoclean -y
+sudo apt clean
 
-# Force remove broken packages
-echo "🔨 Removing old packages..."
-sudo apt-get remove -y --allow-unauthenticated apache2 apache2-utils mysql-server mysql-client mysql-server-8.0 'php*' phpmyadmin libapache2-mod-php8.2 2>/dev/null || true
-sudo apt-get purge -y --allow-unauthenticated apache2 apache2-utils mysql-server mysql-client mysql-server-8.0 'php*' phpmyadmin libapache2-mod-php8.2 2>/dev/null || true
+sudo rm -rf /etc/mysql /var/lib/mysql /var/log/mysql /var/log/mariadb
+sudo rm -rf /etc/my.cnf /etc/my.cnf.d /usr/lib/mysql /usr/include/mysql
+sudo rm -rf /etc/php /var/lib/php
+sudo rm -rf /etc/apache2 /var/www/html /etc/phpmyadmin /var/lib/phpmyadmin
+sudo rm -rf /var/www/${DOMAIN}
 
-# Remove config and data directories completely
-echo "🗑️  Removing configuration and data directories..."
-sudo rm -rf /etc/apache2 /etc/mysql /var/lib/mysql /etc/mysql-default-pass /var/cache/apt/archives/mysql* /etc/php 2>/dev/null || true
+sudo dpkg --configure -a || true
+sudo apt install -f -y || true
+sudo apt update -y
 
-# Force remove any remaining broken packages
-echo "🔧 Removing any remaining broken packages..."
-sudo dpkg -l | grep -i php | awk '{print $2}' | xargs sudo apt-get remove -y --allow-unauthenticated 2>/dev/null || true
-sudo dpkg -l | grep -i apache | awk '{print $2}' | xargs sudo apt-get remove -y --allow-unauthenticated 2>/dev/null || true
-sudo dpkg -l | grep -i mysql | awk '{print $2}' | xargs sudo apt-get remove -y --allow-unauthenticated 2>/dev/null || true
+echo "🧽 System cleanup complete!"
+echo "======================================================="
 
-# Now fix broken dpkg state after removing packages
-echo "🔧 Fixing dpkg state..."
-sudo dpkg --configure -a 2>/dev/null || true
-sudo apt-get install -f -y 2>/dev/null || true
-
-sudo apt-get autoremove -y 2>/dev/null || true
-sudo apt-get autoclean -y 2>/dev/null || true
-sudo apt-get clean 2>/dev/null || true
-
-echo "✅ Old installations removed."
-
-# STEP 1: Update system
+# --- STEP 0: Update system ---
 echo "📦 Updating system packages..."
-sudo apt-get update -y
-sudo apt-get upgrade -y
+sudo apt update -y && sudo apt upgrade -y
 
-# STEP 1.5: Add PHP PPA
-echo "📦 Adding PHP repository..."
-sudo apt-get install -y software-properties-common
-sudo add-apt-repository -y ppa:ondrej/php
-sudo apt-get update -y
-
-# STEP 2: Install Apache
+# --- STEP 1: Install Apache ---
 echo "🌐 Installing Apache..."
-sudo apt-get install -y apache2 apache2-utils
-
-# STEP 3: Install PHP 8.2 with FPM (more stable than Apache module)
-echo "🐘 Installing PHP 8.2 with FPM..."
-sudo apt-get install -y php8.2-fpm php8.2-cli php8.2-common php8.2-mysql php8.2-mbstring php8.2-curl php8.2-gd php8.2-xml php8.2-zip php8.2-intl php8.2-bcmath php8.2-imagick php8.2-dom php8.2-sqlite3
-
-# Restart Apache to ensure modules are recognized
-echo "⏸️  Restarting Apache to initialize modules..."
-sudo systemctl restart apache2
-sleep 2
-
-# Enable required Apache modules for FPM
-echo "📄 Enabling Apache modules..."
-sudo a2enmod proxy || echo "⚠️  Could not enable proxy module, trying alternative..."
-sudo a2enmod proxy_fcgi || echo "⚠️  Could not enable proxy_fcgi module..."
-sudo a2enmod rewrite || echo "⚠️  Could not enable rewrite module..."
-sudo a2enmod ssl || echo "⚠️  Could not enable ssl module..."
-
-# Configure Apache to use PHP-FPM
-echo "🔧 Configuring Apache for PHP-FPM..."
-sudo a2enconf php8.2-fpm || true
-
-# Test Apache configuration and reload
-echo "🧪 Testing Apache configuration..."
-sudo apache2ctl configtest || {
-  echo "⚠️  Apache configuration test failed, attempting repair..."
-  sudo systemctl restart apache2
-}
-
-# STEP 4: Install MySQL
-echo "🗄️  Installing MySQL Server..."
-sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -o Dpkg::Options::="--force-confnew" mysql-server || {
-  echo "⚠️  MySQL installation failed, attempting repair..."
-  sudo dpkg --configure -a
-  sudo apt-get install -f -y
-  sudo DEBIAN_FRONTEND=noninteractive apt-get install -y mysql-server
-}
-
-# STEP 5: Start MySQL and configure
-echo "🔐 Starting MySQL and configuring..."
-sudo systemctl restart mysql || sudo systemctl start mysql
-sleep 2
-
-# Set MySQL root password
-sudo mysql -u root -e "ALTER USER 'root'@'localhost' IDENTIFIED BY '$MYSQL_ROOT_PASSWORD';" 2>/dev/null || {
-  echo "⚠️  Trying alternate method..."
-  sudo mysql -u root -e "SET PASSWORD FOR 'root'@'localhost'=PASSWORD('$MYSQL_ROOT_PASSWORD');" 2>/dev/null || true
-}
-sudo mysql -u root -p"$MYSQL_ROOT_PASSWORD" -e "FLUSH PRIVILEGES;" 2>/dev/null || true
-
-# STEP 6: Start services
-echo "▶️  Starting services..."
+sudo apt install -y apache2
+echo "ServerName localhost" | sudo tee /etc/apache2/conf-available/servername.conf >/dev/null
+sudo a2enconf servername
 sudo systemctl enable apache2
-sudo systemctl enable mysql
-sudo systemctl enable php8.2-fpm
-sudo systemctl restart php8.2-fpm
-sudo systemctl restart apache2
-sleep 3
+sudo systemctl start apache2
 
-# STEP 7: Create test file
-echo "<?php phpinfo(); ?>" | sudo tee $WEBROOT/info.php > /dev/null
-sudo chmod 644 $WEBROOT/info.php
-
-# STEP 8: Install phpMyAdmin
-echo "🧠 Installing phpMyAdmin..."
-sudo apt-get install -y phpmyadmin
-
-# Configure phpMyAdmin with Apache - create Alias and PHP-FPM handler
-echo "⚙️  Configuring phpMyAdmin..."
-sudo tee /etc/apache2/conf-available/phpmyadmin.conf > /dev/null << 'PHPMYADMIN_CONF'
-# phpMyAdmin Apache configuration
-Alias /phpmyadmin /usr/share/phpmyadmin
-
-<Directory /usr/share/phpmyadmin>
-    Options Indexes FollowSymLinks
-    AllowOverride All
-    Require all granted
-
-    # PHP-FPM handler for PHP files
-    <FilesMatch "\.php$">
-        SetHandler "proxy:unix:/run/php/php-fpm.sock|fcgi://localhost"
-    </FilesMatch>
-</Directory>
-
-# Restrict access to configuration files
-<Directory /usr/share/phpmyadmin/config>
-    Require all denied
-</Directory>
-PHPMYADMIN_CONF
-
-# Enable the configuration
-sudo ln -sf /etc/apache2/conf-available/phpmyadmin.conf /etc/apache2/conf-enabled/phpmyadmin.conf 2>/dev/null || true
-sudo systemctl reload apache2
-
-# STEP 8.5: Clean and install Composer
-echo "🧹 Cleaning and removing existing Composer..."
-sudo rm -rf ~/.composer 2>/dev/null || true
-sudo rm -f /usr/local/bin/composer 2>/dev/null || true
-sudo rm -f /usr/bin/composer 2>/dev/null || true
-if command -v composer &> /dev/null; then
-  sudo apt-get remove -y composer 2>/dev/null || true
+# If UFW is enabled
+if sudo ufw status | grep -q "Status: active"; then
+  echo "🔓 Allowing HTTP traffic..."
+  sudo ufw allow 80/tcp
+  sudo ufw reload
 fi
-sudo apt-get autoremove -y 2>/dev/null || true
 
-echo "🎼 Installing Composer..."
-cd /tmp
-php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');" 2>/dev/null || {
-  echo "⚠️  Using fallback Composer installation method..."
-  sudo apt-get install -y composer
-  exit 0
-}
+# --- STEP 2: Install MariaDB ---
+echo "🗄️ Installing MariaDB..."
+sudo apt install -y mariadb-server mariadb-client
+sudo systemctl enable mariadb
+sudo systemctl start mariadb
 
-EXPECTED_CHECKSUM=$(php -r 'copy("https://composer.github.io/installer.sig", "php://stdout");')
-ACTUAL_CHECKSUM=$(php -r "echo hash_file('sha384', 'composer-setup.php');")
+# --- STEP 3: Secure MariaDB installation ---
+echo "🔐 Securing MariaDB installation..."
+sudo systemctl restart mariadb
 
-if [ "$EXPECTED_CHECKSUM" != "$ACTUAL_CHECKSUM" ]; then
-  echo "❌ Composer installer verification failed"
-  rm composer-setup.php
+echo "⏳ Waiting for MariaDB to start..."
+for i in {1..10}; do
+  if sudo mysqladmin ping &>/dev/null; then
+    echo "✅ MariaDB is running!"
+    break
+  fi
+  sleep 2
+done
+
+if ! sudo mysqladmin ping &>/dev/null; then
+  echo "❌ MariaDB failed to start. Check logs with: sudo journalctl -u mariadb"
   exit 1
 fi
 
-sudo php composer-setup.php --install-dir=/usr/local/bin --filename=composer 2>/dev/null || {
-  echo "⚠️  Trying alternate installation..."
-  sudo apt-get install -y composer
-}
-rm -f composer-setup.php
+echo "🔧 Configuring root authentication and cleaning defaults..."
+sudo mysql <<EOF
+ALTER USER 'root'@'localhost' IDENTIFIED VIA mysql_native_password USING PASSWORD('${MYSQL_ROOT_PASSWORD}');
+FLUSH PRIVILEGES;
+EOF
 
-# Verify Composer installation
-echo "✅ Composer installed:"
-composer -V
+sudo mysql -u root -p${MYSQL_ROOT_PASSWORD} <<EOF
+DELETE FROM mysql.user WHERE User='';
+DROP DATABASE IF EXISTS test;
+DELETE FROM mysql.db WHERE Db='test' OR Db='test\\_%';
+FLUSH PRIVILEGES;
+EOF
 
-# STEP 8.6: Update Composer and enable all plugins
-echo "🔧 Updating Composer and configuring..."
-composer self-update --stable 2>/dev/null || true
-composer global config allow-plugins.true 2>/dev/null || true
+echo "✅ MariaDB root password configured successfully."
+echo "======================================================="
 
-# STEP 9: Set PHP as default CLI
-echo "🔗 Setting PHP 8.2 as default CLI..."
-sudo update-alternatives --install /usr/bin/php php /usr/bin/php8.2 82 || true
+# --- STEP 4: Install PHP ---
+echo "🐘 Installing PHP and modules..."
+sudo apt install -y php php-cli php-common libapache2-mod-php \
+  php-mysql php-mbstring php-zip php-gd php-curl php-xml php-intl php-bcmath php-sqlite3
+sudo systemctl restart apache2
 
-# STEP 11: Verify Installation
+# --- STEP 5: Create test PHP page ---
+echo "🧪 Creating test PHP file..."
+sudo mkdir -p ${WEBROOT}
+sudo tee ${WEBROOT}/info.php > /dev/null <<EOF
+<?php
+phpinfo();
+EOF
+sudo chmod 644 ${WEBROOT}/info.php
+sudo chown ${USER}:${USER} ${WEBROOT}/info.php
+
+# --- STEP 6: Configure Apache Virtual Host ---
+echo "📁 Setting up Apache virtual host for ${DOMAIN}..."
+sudo mkdir -p /var/www/${DOMAIN}
+sudo chown -R ${USER}:${USER} /var/www/${DOMAIN}
+sudo chmod -R 755 /var/www/${DOMAIN}
+
+sudo tee /etc/apache2/sites-available/${DOMAIN}.conf > /dev/null <<EOF
+<VirtualHost *:80>
+    ServerAdmin webmaster@localhost
+    ServerName ${DOMAIN}
+    ServerAlias www.${DOMAIN}
+    DocumentRoot ${WEBROOT}
+    ErrorLog \${APACHE_LOG_DIR}/error.log
+    CustomLog \${APACHE_LOG_DIR}/access.log combined
+</VirtualHost>
+EOF
+
+sudo a2ensite ${DOMAIN}.conf
+sudo a2dissite 000-default.conf
+sudo apache2ctl configtest
+sudo systemctl reload apache2
+
+# --- STEP 7: Install phpMyAdmin non-interactively ---
+echo "🧩 Installing phpMyAdmin (non-interactive)..."
+echo "phpmyadmin phpmyadmin/dbconfig-install boolean true" | sudo debconf-set-selections
+echo "phpmyadmin phpmyadmin/app-password-confirm password ${MYSQL_ROOT_PASSWORD}" | sudo debconf-set-selections
+echo "phpmyadmin phpmyadmin/mysql/admin-pass password ${MYSQL_ROOT_PASSWORD}" | sudo debconf-set-selections
+echo "phpmyadmin phpmyadmin/mysql/app-pass password ${MYSQL_ROOT_PASSWORD}" | sudo debconf-set-selections
+echo "phpmyadmin phpmyadmin/reconfigure-webserver multiselect apache2" | sudo debconf-set-selections
+
+sudo apt install -y phpmyadmin
+
+# Ensure phpMyAdmin Apache config is linked
+if [ -f /etc/phpmyadmin/apache.conf ]; then
+  sudo ln -sf /etc/phpmyadmin/apache.conf /etc/apache2/conf-available/phpmyadmin.conf
+  sudo a2enconf phpmyadmin
+  sudo systemctl reload apache2
+else
+  echo "⚠️  phpMyAdmin config not found! Try reinstalling manually."
+fi
+
+# --- STEP 8: Restart services ---
+sudo systemctl restart apache2
+sudo systemctl restart mariadb
+
+# --- STEP 9: Output success info ---
 echo "======================================="
-echo "✅ LAMP STACK + COMPOSER INSTALLED SUCCESSFULLY!"
+echo "✅ LAMP + phpMyAdmin Installed Successfully!"
+echo "🌍 Apache:        http://${DOMAIN}/"
+echo "🖥️  Test PHP:     http://${DOMAIN}/info.php"
+echo "🧩 phpMyAdmin:    http://${DOMAIN}/phpmyadmin"
+echo "📁 Web Root:      ${WEBROOT}"
+echo "🔐 MariaDB root password: ${MYSQL_ROOT_PASSWORD}"
 echo "======================================="
-echo "🌍 Apache:        http://localhost/"
-echo "🧰 phpMyAdmin:    http://localhost/phpmyadmin/"
-echo "🗝️  MySQL User:   root"
-echo "🔓 Password:      $MYSQL_ROOT_PASSWORD"
-echo "🖥️  Test PHP:     http://localhost/info.php"
-echo "📁 Web Root:      $WEBROOT"
-echo "======================================="
-echo "� Installed versions:"
 php -v | head -n1
-composer -V
-echo "======================================="
-echo "🐘 Active PHP Modules:"
-php -m | sort
-echo "======================================="
-echo "�💡 Useful commands:"
-echo "    sudo systemctl start/stop/restart apache2"
-echo "    sudo systemctl start/stop/restart mysql"
-echo "    sudo systemctl start/stop/restart php8.2-fpm"
-echo "    mysql -u root -p"
-echo "    composer update  (in your project directory)"
-echo "    composer install (in your project directory)"
 echo "======================================="
