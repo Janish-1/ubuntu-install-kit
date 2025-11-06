@@ -1,0 +1,1 @@
+sudo rm /etc/apt/sources.list.d/ondrej-php.list
